@@ -1,0 +1,32 @@
+use ic_cdk_macros::*;
+use candid::{CandidType, Deserialize};
+use std::cell::RefCell;
+
+#[derive(CandidType, Deserialize, Clone)]
+struct PriceData {
+    btc_usd_price_cents: u64,
+    last_updated_epoch: u64,
+}
+
+thread_local! {
+    static PRICE: RefCell<PriceData> = RefCell::new(PriceData {
+        btc_usd_price_cents: 70_000_00,
+        last_updated_epoch: ic_cdk::api::time(),
+    });
+}
+
+#[query]
+fn get_btc_usd_price() -> PriceData {
+    PRICE.with(|price| price.borrow().clone())
+}
+
+#[update]
+fn update_price(new_price_cents: u64) -> String {
+    PRICE.with(|price| {
+        *price.borrow_mut() = PriceData {
+            btc_usd_price_cents: new_price_cents,
+            last_updated_epoch: ic_cdk::api::time(),
+        };
+    });
+    format!("Price updated to ${}.{}", new_price_cents / 100, new_price_cents % 100)
+}

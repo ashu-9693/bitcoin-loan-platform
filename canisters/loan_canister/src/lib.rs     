@@ -1,0 +1,73 @@
+use ic_cdk_macros::*;
+use ic_cdk::api::caller;
+use candid::{CandidType, Deserialize, Principal};
+use std::collections::HashMap;
+use std::cell::RefCell;
+
+#[derive(Clone, Debug, CandidType, Deserialize)]
+enum LoanStatus {
+    Active,
+    Repaid,
+    Liquidated,
+}
+
+#[derive(Clone, Debug, CandidType, Deserialize)]
+struct LoanInfo {
+    user: Principal,
+    loan_amount_usd: u64,
+    collateral_btc_sats: u64,
+    btc_usd_price: u64,
+    status: LoanStatus,
+}
+
+thread_local! {
+    static LOANS: RefCell<HashMap<Principal, LoanInfo>> = RefCell::new(HashMap::new());
+}
+
+fn get_mock_btc_usd_price() -> u64 {
+    70_000_00 // $70,000 in cents
+}
+
+const LTV_PERCENT: u64 = 50;
+
+#[update]
+fn request_loan(btc_collateral_sats: u64) -> String {
+    let user = caller();
+    let btc_price = get_mock_btc_usd_price();
+
+    let btc_collateral_usd = (btc_collateral_sats * btc_price) / 100_000_000;
+    let loan_amount = (btc_collateral_usd * LTV_PERCENT) / 100;
+
+    let info = LoanInfo {
+        user,
+        loan_amount_usd: loan_amount,
+        collateral_btc_sats,
+        btc_usd_price: btc_price,
+        status: LoanStatus::Active,
+    };
+
+    LOANS.with(|loans| {
+        loans.borrow_mut().insert(user, info);
+    });
+
+    format!("Loan of ${} issued successfully!", loan_amount)
+}
+
+#[query]
+fn check_loan(user: Principal) -> Option<LoanInfo> {
+    LOANS.with(|loans| loans.borrow().get(&user).cloned())
+}
+
+#[update]
+fn repay_loan() -> String {
+    let user = caller();
+    LOANS.with(|loans| {
+        let mut map = loans.borrow_mut();
+        if let Some(loan) = map.get_mut(&user) {
+            loan.status = LoanStatus::Repaid;
+            "Loan repaid successfully.".to_string()
+        } else {
+            "No active loan found.".to_string()
+        }
+    })
+}

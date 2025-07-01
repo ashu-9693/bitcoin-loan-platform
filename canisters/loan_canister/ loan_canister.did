@@ -1,0 +1,13 @@
+type LoanStatus = variant { Active; Repaid; Liquidated };
+type LoanInfo = record {
+  user: principal;
+  loan_amount_usd: nat64;
+  collateral_btc_sats: nat64;
+  btc_usd_price: nat64;
+  status: LoanStatus;
+};
+service : {
+  request_loan : (nat64) -> (text);
+  check_loan : (principal) -> (opt LoanInfo) query;
+  repay_loan : () -> (text);
+}

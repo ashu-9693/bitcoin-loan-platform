@@ -1,0 +1,68 @@
+use ic_cdk::api;
+use ic_cdk_macros::*;
+use ic_stable_structures::{StableBTreeMap, memory_manager::MemoryManager, DefaultMemoryImpl};
+use candid::{CandidType, Deserialize, Principal};
+use std::cell::RefCell;
+use std::collections::HashMap;
+
+type BtcAddress = String;
+
+#[derive(Clone, Debug, CandidType, Deserialize)]
+struct CollateralInfo {
+    btc_address: BtcAddress,
+    total_btc: u64, // in satoshis
+    utxos: Vec<String>,
+}
+
+thread_local! {
+    static COLLATERALS: RefCell<HashMap<Principal, CollateralInfo>> = RefCell::new(HashMap::new());
+}
+
+#[init]
+fn init() {
+    ic_cdk::println!("Vault Canister initialized!");
+}
+
+#[update]
+fn register_user() -> BtcAddress {
+    let caller = api::caller();
+    let btc_address = generate_btc_address(&caller);
+
+    COLLATERALS.with(|coll| {
+        coll.borrow_mut().insert(
+            caller,
+            CollateralInfo {
+                btc_address: btc_address.clone(),
+                total_btc: 0,
+                utxos: vec![],
+            },
+        );
+    });
+
+    btc_address
+}
+
+#[query]
+fn get_user_btc_address(user: Principal) -> Option<BtcAddress> {
+    COLLATERALS.with(|coll| {
+        coll.borrow().get(&user).map(|info| info.btc_address.clone())
+    })
+}
+
+#[update]
+fn update_btc_balance(user: Principal, amount_sats: u64, utxo: String) -> String {
+    COLLATERALS.with(|coll| {
+        let mut map = coll.borrow_mut();
+        if let Some(info) = map.get_mut(&user) {
+            info.total_btc += amount_sats;
+            info.utxos.push(utxo);
+            "BTC collateral updated!".to_string()
+        } else {
+            "User not found!".to_string()
+        }
+    })
+}
+
+fn generate_btc_address(user: &Principal) -> BtcAddress {
+    format!("btc_mock_{}", user.to_text())
+}

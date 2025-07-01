@@ -1,0 +1,8 @@
+type PriceData = record {
+  btc_usd_price_cents: nat64;
+  last_updated_epoch: nat64;
+};
+service : {
+  get_btc_usd_price : () -> (PriceData) query;
+  update_price : (nat64) -> (text);
+}

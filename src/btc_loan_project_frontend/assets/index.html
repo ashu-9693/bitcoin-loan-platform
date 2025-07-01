@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitcoin Loan Platform</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .loan-card { border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        button { background: #007bff; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 3px; }
+        input, select { padding: 8px; margin: 5px; border: 1px solid #ddd; border-radius: 3px; }
+        .form-group { margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>🟧 Bitcoin Loan Platform</h1>
+    
+    <div id="create-loan">
+        <h2>Create Loan Request</h2>
+        <div class="form-group">
+            <label>BTC Collateral (satoshis):</label>
+            <input type="number" id="collateral" placeholder="100000000" />
+        </div>
+        <div class="form-group">
+            <label>Loan Amount (USD cents):</label>
+            <input type="number" id="loanAmount" placeholder="500000" />
+        </div>
+        <div class="form-group">
+            <label>Interest Rate (%):</label>
+            <input type="number" id="interestRate" placeholder="5.5" step="0.1" />
+        </div>
+        <div class="form-group">
+            <label>Duration (days):</label>
+            <input type="number" id="duration" placeholder="30" />
+        </div>
+        <button onclick="createLoan()">Create Loan</button>
+    </div>
+
+    <div id="loans-list">
+        <h2>All Loans</h2>
+        <div id="loans-container"></div>
+        <button onclick="loadLoans()">Refresh Loans</button>
+    </div>
+
+    <script type="module">
+        import { createActor, btc_loan_project_backend } from "./declarations/btc_loan_project_backend/index.js";
+
+        window.backend = btc_loan_project_backend;
+        
+        window.createLoan = async () => {
+            const collateral = parseInt(document.getElementById('collateral').value);
+            const loanAmount = parseInt(document.getElementById('loanAmount').value);
+            const interestRate = parseFloat(document.getElementById('interestRate').value);
+            const duration = parseInt(document.getElementById('duration').value);
+
+            try {
+                const loanId = await backend.create_loan_request(collateral, loanAmount, interestRate, duration);
+                alert(`Loan created with ID: ${loanId}`);
+                loadLoans();
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        };
+
+        window.loadLoans = async () => {
+            try {
+                const loans = await backend.get_all_loans();
+                const container = document.getElementById('loans-container');
+                container.innerHTML = '';
+                
+                loans.forEach(loan => {
+                    const loanDiv = document.createElement('div');
+                    loanDiv.className = 'loan-card';
+                    loanDiv.innerHTML = `
+                        <h3>Loan #${loan.id}</h3>
+                        <p><strong>Status:</strong> ${Object.keys(loan.status)[0]}</p>
+                        <p><strong>Collateral:</strong> ${loan.btc_collateral_amount} sats</p>
+                        <p><strong>Loan Amount:</strong> $${(loan.loan_amount_usd / 100).toFixed(2)}</p>
+                        <p><strong>Interest Rate:</strong> ${loan.interest_rate}%</p>
+                        <p><strong>Duration:</strong> ${loan.duration_days} days</p>
+                        <p><strong>BTC Address:</strong> ${loan.btc_address}</p>
+                        ${Object.keys(loan.status)[0] === 'Pending' ? 
+                            `<button onclick="approveLoan(${loan.id})">Approve</button>` : ''}
+                        ${Object.keys(loan.status)[0] === 'Active' ? 
+                            `<button onclick="repayLoan(${loan.id})">Repay</button>` : ''}
+                    `;
+                    container.appendChild(loanDiv);
+                });
+            } catch (error) {
+                alert(`Error loading loans: ${error.message}`);
+            }
+        };
+
+        window.approveLoan = async (loanId) => {
+            try {
+                const result = await backend.approve_loan(loanId);
+                if (result) {
+                    alert('Loan approved!');
+                    loadLoans();
+                } else {
+                    alert('Failed to approve loan');
+                }
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        };
+
+        window.repayLoan = async (loanId) => {
+            try {
+                const result = await backend.repay_loan(loanId);
+                if (result) {
+                    alert('Loan repaid!');
+                    loadLoans();
+                } else {
+                    alert('Failed to repay loan');
+                }
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        };
+
+        // Load loans on page load
+        loadLoans();
+    </script>
+</body>
+</html>

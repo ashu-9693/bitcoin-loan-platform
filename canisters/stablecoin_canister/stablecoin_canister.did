@@ -1,0 +1,6 @@
+service : {
+  get_token_info : () -> (record { text; text; nat8 }) query;
+  balance_of : (principal) -> (nat64) query;
+  mint : (principal, nat64) -> (text);
+  burn : (principal, nat64) -> (text);
+}

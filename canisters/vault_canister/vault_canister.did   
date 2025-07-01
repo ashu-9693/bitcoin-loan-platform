@@ -1,0 +1,5 @@
+service : {
+  register_user : () -> (text);
+  get_user_btc_address : (principal) -> (opt text) query;
+  update_btc_balance : (principal, nat64, text) -> (text);
+}

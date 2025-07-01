@@ -1,0 +1,27 @@
+service : {
+  create_loan_request: (nat64, nat64, float64, nat32) -> (nat64);
+  get_loan: (nat64) -> (opt record {
+    id: nat64;
+    borrower: principal;
+    btc_collateral_amount: nat64;
+    loan_amount_usd: nat64;
+    interest_rate: float64;
+    duration_days: nat32;
+    status: variant { Pending; Active; Repaid; Liquidated; Defaulted };
+    created_at: nat64;
+    btc_address: text;
+  }) query;
+  get_all_loans: () -> (vec record {
+    id: nat64;
+    borrower: principal;
+    btc_collateral_amount: nat64;
+    loan_amount_usd: nat64;
+    interest_rate: float64;
+    duration_days: nat32;
+    status: variant { Pending; Active; Repaid; Liquidated; Defaulted };
+    created_at: nat64;
+    btc_address: text;
+  }) query;
+  approve_loan: (nat64) -> (bool);
+  repay_loan: (nat64) -> (bool);
+}
