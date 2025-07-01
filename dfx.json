@@ -1,0 +1,27 @@
+{
+  "canisters": {
+    "btc_loan_project_backend": {
+      "candid": "src/btc_loan_project_backend/btc_loan_project_backend.did",
+      "package": "btc_loan_project_backend",
+      "type": "rust"
+    },
+    "btc_loan_project_frontend": {
+      "dependencies": [
+        "btc_loan_project_backend"
+      ],
+      "source": [
+        "src/btc_loan_project_frontend/dist"
+      ],
+      "type": "assets",
+      "workspace": "btc_loan_project_frontend"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}
