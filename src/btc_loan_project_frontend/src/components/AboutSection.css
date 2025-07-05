@@ -1,0 +1,41 @@
+/* Slide-in animation for the About section */
+.about-slide-in {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 320px;
+  height: 100%;
+  background-color: #ffffff;
+  color: #111;
+  padding: 2rem;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  transform: translateX(-100%);
+  animation: slideIn 0.4s forwards;
+  z-index: 999;
+}
+
+.about-slide-in.dark {
+  background-color: #1c1c1c;
+  color: #f9f9f9;
+}
+
+@keyframes slideIn {
+  to {
+    transform: translateX(0%);
+  }
+}
+
+.about-slide-in button {
+  margin-top: 2rem;
+  background-color: #ff6b6b;
+  border: none;
+  padding: 10px 16px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.about-slide-in button:hover {
+  background-color: #e74c3c;
+}

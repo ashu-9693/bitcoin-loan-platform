@@ -7,8 +7,10 @@
       "candid": "src/btc_loan_project_backend/btc_loan_project_backend.did"
     },
     "btc_loan_project_frontend": {
-      "type": "assets",
-      "source": ["src/btc_loan_project_frontend/assets"]
-    }
+  "type": "assets",
+  "source": ["src/btc_loan_project_frontend/dist"],
+  "build": "sh -c 'cd src/btc_loan_project_frontend && npm install && npm run build'"
+}
+
   }
 }
