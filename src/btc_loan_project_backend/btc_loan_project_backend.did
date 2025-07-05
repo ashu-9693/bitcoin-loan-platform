@@ -1,3 +1,42 @@
+type LoanStatus = variant { Pending; Approved; Active; Repaid; Defaulted };
+
+type LoanRequest = record {
+  id: text;
+  borrower: text;
+  amount: nat64;
+  collateral_amount: nat64;
+  interest_rate: float64;
+  duration_days: nat32;
+  status: LoanStatus;
+};
+
+type HttpHeader = record { name: text; value: text };
+
+type HttpRequest = record {
+  method: text;
+  url: text;
+  headers: vec HttpHeader;
+  body: vec nat8;
+};
+
+type HttpResponse = record {
+  status: nat;
+  headers: vec HttpHeader;
+  body: vec nat8;
+};
+
 service : {
-    "greet": (text) -> (text) query;
-}
+  create_loan_request: (text, nat64, nat64, float64, nat32) -> (variant { Ok: text; Err: text });
+  get_loan_request: (text) -> (variant { Ok: LoanRequest; Err: text }) query;
+  get_all_loans: () -> (vec LoanRequest) query;
+  approve_loan: (text) -> (variant { Ok: text; Err: text });
+  activate_loan: (text) -> (variant { Ok: text; Err: text });
+  repay_loan: (text) -> (variant { Ok: text; Err: text });
+  get_platform_stats: () -> (record {
+    total_loans: nat64;
+    pending_loans: nat64;
+    active_loans: nat64;
+    repaid_loans: nat64;
+  }) query;
+  http_request: (HttpRequest) -> (HttpResponse) query;
+};
